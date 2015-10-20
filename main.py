@@ -24,7 +24,7 @@ for fileName in fileNames:
     print "----------------"
     print "\nCreating graph from", fileName, "..."
     graph = Graph(fileName, print_adjacency_list)
-    time = print_time(time)
+    read_time = time = print_time(time)
     print "Generating Page Rank"
     pr = PageRank(graph.return_graph(), .85, fileName)
     '''print "Itterations"
@@ -32,7 +32,9 @@ for fileName in fileNames:
     time = print_time(time)'''
     print "\nConverge"
     pr.runPageRankE(.000001)
-    time = print_time(time)
+    processing_time = time = print_time(time)
     with open(fileName.split('.')[0] + '-result.txt', 'a') as f:
-        f.write("Total Time" + '\t' + str(time-total_time) + '\n')
+        f.write("Read Time" + '\t' + str(read_time) + '\n')
+        f.write("Processing Time" + '\t' + str(processing_time) + '\n')
+        
     print "\nTotal Time: ", time - total_time
