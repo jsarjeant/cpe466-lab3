@@ -1,8 +1,10 @@
+
 class Graph:
-    def __init__(self, fileName):
+    def __init__(self, fileName, print_adjacency_list):
         self.graph = {}
         self.__process_graph(fileName)
-        self.__print_adjacency_list()
+        if print_adjacency_list:
+            self.__print_adjacency_list()
         pass
 
     # Helper for the construction of the graph.

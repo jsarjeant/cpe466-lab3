@@ -1,16 +1,38 @@
 from Graph import Graph
 from pagerank import PageRank
 import sys
+from datetime import datetime
 
-fileName = "karateDir.csv"
+
+def print_time(start_time):
+    endTime = datetime.now()
+    print "Time: ", endTime - start_time, "\n"
+    return endTime
+
+
+fileNames = []
+print_adjacency_list = False
 for arg in sys.argv:
     if ".txt" in arg or ".csv" in arg or ".gml" in arg:
-        fileName = arg
+        fileNames.append(arg)
 
-graph = Graph(fileName)
-pr = PageRank(graph.return_graph(), .85)
+    if "-p" in arg:
+        print_adjacency_list = True
 
-print "Itterations"
-pr.runPageRankI(100)
-print "\nConverge"
-pr.runPageRankE(.000001)
+for fileName in fileNames:
+    total_time = time = datetime.now()
+    print "----------------"
+    print "\nCreating graph from", fileName, "..."
+    graph = Graph(fileName, print_adjacency_list)
+    time = print_time(time)
+    print "Generating Page Rank"
+    pr = PageRank(graph.return_graph(), .85, fileName)
+    '''print "Itterations"
+    pr.runPageRankI(100)
+    time = print_time(time)'''
+    print "\nConverge"
+    pr.runPageRankE(.000001)
+    time = print_time(time)
+    with open(fileName.split('.')[0] + '-result.txt', 'a') as f:
+        f.write("Total Time" + '\t' + str(time-total_time) + '\n')
+    print "\nTotal Time: ", time - total_time
