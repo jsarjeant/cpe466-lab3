@@ -2,6 +2,7 @@ import operator
 import itertools
 import sys
 import signal
+import multiprocessing
 from datetime import datetime
 
 
@@ -16,6 +17,7 @@ class PageRank:
         self.ranks = {}
         self.epsilon = 0
         self.interrupt = False
+        self.pool = multiprocessing.Pool()
 
 
     def runPageRankE(self, e):
@@ -34,8 +36,15 @@ class PageRank:
 
             newRanks = {}
             # Calc PageRank for each node
-            for n in self.graph:
-                newRanks[n] = self.__calcNodeRank(n)
+            tasks = self.graph.keys()
+
+            results = [self.pool.apply_async(self.__calcNodeRank, t) for t in tasks]
+            for result in results:
+                (n, rank) = result.get()
+                newRank[n] = rank
+
+            #for n in self.graph:
+            #    newRanks[n] = self.__calcNodeRank(n)
 
             self.epsilon = self.__calcDifference(newRanks, self.ranks)
             print "Iteration: ", self.ittrNum, " -- Epsilon: ", self.epsilon
@@ -89,21 +98,21 @@ class PageRank:
 
         return ranks
 
-    def __calcNodeRank(self, nodeId):
+    def __calcNodeRank(self, ranks, graph, nodeId):
         # pR(i) = (1 - d) / numNodes + d * sum(pR-1(j) / outdegree(j))
-        inNodes = self.__findInNodes(nodeId)
+        inNodes = findInNodes(nodeId, graph)
         inSum = 0
         for n in inNodes:
-            inSum += self.ranks[n] / float(len(self.graph[n]))
-        return (1 - self.d) / self.numVerts + self.d * inSum
-
-    def __findInNodes(self, nodeId):
-        # Returns all nodes that point to [nodeId]
-        nodes = []
-        for n in self.graph:
-            if nodeId in self.graph[n]:
-                nodes.append(n)
-        return nodes
+            inSum += ranks[n] / float(len(graph[n]))
+        return (nodeId, (1 - self.d) / self.numVerts + self.d * inSum)
+        
+        def __findInNodes(nodeId, graph):
+            # Returns all nodes that point to [nodeId]
+            nodes = []
+            for n in self.graph:
+                if nodeId in self.graph[n]:
+                    nodes.append(n)
+            return nodes
 
     # dict1 = new
     # dict2 = old
