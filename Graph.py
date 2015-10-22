@@ -1,7 +1,8 @@
 
 class Graph:
-    def __init__(self, fileName, print_adjacency_list):
+    def __init__(self, fileName, print_adjacency_list, directed):
         self.graph = {}
+        self.directed = directed
         self.__process_graph(fileName)
         if print_adjacency_list:
             self.__print_adjacency_list()
@@ -29,6 +30,10 @@ class Graph:
             #TODO: Deal with edge weights
             self.graph.setdefault(nf, set([]))
             self.graph[nf].add(nt)
+
+            if self.directed:
+                self.graph.setdefault(nt, set([]))
+                self.graph[nt].add(nf)
 
     def __print_adjacency_list(self):
         for k, v in self.graph.items():

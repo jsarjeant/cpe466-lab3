@@ -31,7 +31,9 @@ class PageRank:
                 newRanks[n] = self.__calcNodeRank(n)
 
             epsilon = self.__calcDifference(newRanks, self.ranks)
-            #print " Epsilon: ", epsilon
+            if self.file_name == "soc-LiveJournal1.txt":
+                print " Epsilon: ", epsilon
+
             if epsilon < e:
                 return self.__foundPageRank(newRanks, ittrNum)
             # update Ranks
