@@ -14,6 +14,8 @@ class PageRank:
         signal.signal(signal.SIGINT, self.signal_handler)
         self.ittrNum = 0
         self.ranks = {}
+        self.epsilon = 0
+        self.interrupt = False
 
 
     def runPageRankE(self, e):
@@ -26,6 +28,7 @@ class PageRank:
         start_time = datetime.now()
         end_time = datetime.now()
         while True:
+
             self.ittrNum = self.ittrNum + 1
             start_time = end_time
 
@@ -34,15 +37,15 @@ class PageRank:
             for n in self.graph:
                 newRanks[n] = self.__calcNodeRank(n)
 
-            epsilon = self.__calcDifference(newRanks, self.ranks)
-            print "Iteration: ", self.ittrNum, " -- Epsilon: ", epsilon
+            self.epsilon = self.__calcDifference(newRanks, self.ranks)
+            print "Iteration: ", self.ittrNum, " -- Epsilon: ", self.epsilon
 
-            if epsilon < e:
-                return self.__foundPageRank(newRanks, self.ittrNum)
+            if self.epsilon < e or self.interrupt:
+                return self.__foundPageRank(newRanks, self.ittrNum, self.interrupt)
             # update Ranks
             self.ranks = newRanks
             end_time = datetime.now()
-            #print "Time: ", end_time - start_time
+            print "Time: ", end_time - start_time
 
     def runPageRankI(self, numIttr):
         ittrNum = 0
@@ -72,7 +75,7 @@ class PageRank:
 
         return self.__foundPageRank(self.ranks, ittrNum)
 
-    def __foundPageRank(self, ranks, ittrNum):
+    def __foundPageRank(self, ranks, ittrNum, interrupt=False):
         print "Page rank found in: ", ittrNum, "iterations"
         length = len(ranks)
         ranks = reversed(sorted(ranks.items(), key=operator.itemgetter(1)))
@@ -81,7 +84,8 @@ class PageRank:
                 f.write(key + "\t" + str(val) + "\n")
 
             f.write("Itterations" + "\t" + str(ittrNum) + "\n")
-
+            if interrupt:
+                f.write("Epsilon\t" + str(self.epsilon) + "\n");
 
         return ranks
 
@@ -110,5 +114,5 @@ class PageRank:
         return sum
 
     def signal_handler(self, signal, frame):
-        self.__foundPageRank(self.ranks, self.ittrNum)
-        sys.exit(0)
+        print "Pressed ctrl+c"
+        self.interrupt = True

@@ -33,11 +33,11 @@ for fileName in fileNames:
     read_time = time = print_time(time)
     print "Generating Page Rank"
     pr = PageRank(graph.return_graph(), .85, fileName)
-    print "Itterations"
+    '''print "Itterations"
     pr.runPageRankI(20)
-    '''time = print_time(time)
+    time = print_time(time)'''
     print "\nConverge"
-    pr.runPageRankE(.000001)'''
+    pr.runPageRankE(.000001)
     processing_time = time = print_time(time)
     with open(fileName.split('.')[0] + '-result.txt', 'a') as f:
         f.write("Read Time" + '\t' + str(read_time - total_time) + '\n')
