@@ -1,6 +1,7 @@
 import operator
 import itertools
-import json
+import sys
+import signal
 from datetime import datetime
 
 
@@ -10,32 +11,34 @@ class PageRank:
         self.d = d
         self.numVerts = float(len(graph))
         self.file_name = file_name
+        signal.signal(signal.SIGINT, self.signal_handler)
+        self.ittrNum = 0
+        self.ranks = {}
+
 
     def runPageRankE(self, e):
-        ittrNum = 0
+
 
         # start with all weights being equal
-        self.ranks = {}
         for n in self.graph:
             self.ranks[n] = 1 / self.numVerts
         # While sum of new rank of nodes - old rank of nodes > e
         start_time = datetime.now()
         end_time = datetime.now()
         while True:
-            ittrNum = ittrNum + 1
+            self.ittrNum = self.ittrNum + 1
             start_time = end_time
-            #print "Iteration: ", ittrNum
+
             newRanks = {}
             # Calc PageRank for each node
             for n in self.graph:
                 newRanks[n] = self.__calcNodeRank(n)
 
             epsilon = self.__calcDifference(newRanks, self.ranks)
-            if self.file_name == "soc-LiveJournal1.txt":
-                print " Epsilon: ", epsilon
+            print "Iteration: ", self.ittrNum, " -- Epsilon: ", epsilon
 
             if epsilon < e:
-                return self.__foundPageRank(newRanks, ittrNum)
+                return self.__foundPageRank(newRanks, self.ittrNum)
             # update Ranks
             self.ranks = newRanks
             end_time = datetime.now()
@@ -105,3 +108,7 @@ class PageRank:
         for n in dict1:
             sum += abs(dict1[n] - dict2[n])
         return sum
+
+    def signal_handler(self, signal, frame):
+        self.__foundPageRank(self.ranks, self.ittrNum)
+        sys.exit(0)

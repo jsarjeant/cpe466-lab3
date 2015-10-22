@@ -1,11 +1,15 @@
+import sys
+import signal
 
 class Graph:
     def __init__(self, fileName, print_adjacency_list, directed):
         self.graph = {}
         self.directed = directed
+        signal.signal(signal.SIGINT, self.signal_handler)
         self.__process_graph(fileName)
         if print_adjacency_list:
             self.__print_adjacency_list()
+
         pass
 
     # Helper for the construction of the graph.
@@ -20,20 +24,21 @@ class Graph:
             nt_index = 1
             split_char = None
 
-        for line in open(file_name, 'r').readlines():
-            if line[0] == '#':
-                continue
+        with open(file_name, 'r') as f:
+            for line in f:
+                if line[0] == '#':
+                    continue
 
-            nodes = line.split(split_char) if split_char else line.split()
-            nf = nodes[nf_index]
-            nt = nodes[nt_index]
-            #TODO: Deal with edge weights
-            self.graph.setdefault(nf, set([]))
-            self.graph[nf].add(nt)
+                nodes = line.split(split_char) if split_char else line.split()
+                nf = nodes[nf_index]
+                nt = nodes[nt_index]
+                #TODO: Deal with edge weights
+                self.graph.setdefault(nf, set([]))
+                self.graph[nf].add(nt)
 
-            if self.directed:
-                self.graph.setdefault(nt, set([]))
-                self.graph[nt].add(nf)
+                if self.directed:
+                    self.graph.setdefault(nt, set([]))
+                    self.graph[nt].add(nf)
 
     def __print_adjacency_list(self):
         for k, v in self.graph.items():
@@ -47,3 +52,7 @@ class Graph:
 
     def get_node(self, node_id):
         return self.graph[node_id]
+
+    def signal_handler(self, signal, frame):
+        print 'You pressed Ctrl+C!'
+        sys.exit(0)
