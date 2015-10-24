@@ -17,8 +17,8 @@ class Graph:
     # adding the edges into the adjacency graph
     def __process_graph(self, file_name):
         # Set which index to look into after the split on each on of the file
-        nf_index = 0
-        nt_index = 2
+        nf_index = 2
+        nt_index = 0
         split_char = ','
         if ".txt" in file_name:
             nt_index = 1
@@ -30,8 +30,8 @@ class Graph:
                     continue
 
                 nodes = line.split(split_char) if split_char else line.split()
-                nf = nodes[nf_index]
-                nt = nodes[nt_index]
+                nf = nodes[nf_index].strip()
+                nt = nodes[nt_index].strip()
                 #TODO: Deal with edge weights
                 self.graph.setdefault(nf, set([]))
                 self.graph[nf].add(nt)
