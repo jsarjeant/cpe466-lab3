@@ -1,0 +1,22 @@
+authors Joseph Sarjeant (jsarjean) Daniel Wessel (dwessel)
+*******
+*Files*
+*******
+main.py : The driver of the file.
+Graph.py : Builds an adjacency list from a graph file. (.txt or .csv)
+pageRank.py : Given an adjaceny list from Graph.py compute the page rank for each node in the graph.
+
+*******
+*Flags*
+*******
+-p prints the Adjaceny list after it has been constructed.
+-d the provided file is a directed graph
+
+*******
+*Usage*
+*******
+python main.py filename.txt filename2.csv … filenameN.txt
+
+This will create a graph from the provided files and compute the pagerank of the constructed graph. Each graph's pagerank will be computed and output into a text file with -result appended to it.
+
+e.g. filename.txt -> filename-result.txt
