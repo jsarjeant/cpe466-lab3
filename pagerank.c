@@ -7,12 +7,12 @@
 int main() {
    int i, numVerts = MATRIX_SIZE;
    float *ranks;
-   // Setup Graph
-   char graph[MATRIX_SIZE][MATRIX_SIZE] = {{0, 1, 1, 0, 1},
-                                           {0, 0, 1, 0, 1},
-                                           {0, 0, 0, 1, 0},
-                                           {0, 0, 0, 0, 0},
-                                           {0, 0, 0, 0, 0}};
+   // Setup Graph[toIndex][fromIndex]
+   char graph[MATRIX_SIZE][MATRIX_SIZE] = {{0, 0, 0, 0, 0},
+                                           {1, 0, 0, 0, 0},
+                                           {1, 1, 0, 0, 0},
+                                           {0, 0, 1, 0, 0},
+                                           {1, 1, 0, 0, 0}};
    char **g = malloc(sizeof(char *) * numVerts);
    for (i = 0; i < numVerts; i++) {
       g[i] = malloc(sizeof(char) * numVerts);
@@ -39,14 +39,24 @@ int main() {
    return 0;
 }
 
-// Calculates Pagerank for a given graph
+/** 
+ * Calculates Pagerank for a given graph
+ */
 float *runPageRankE(char **graph, int numVerts) {
-   int i, ittrCount = 0;
-
+   int i, j, ittrCount = 0, outSum, *outDegrees = calloc(sizeof(int), numVerts);
    float *oldRanks = calloc(sizeof(float), numVerts), *newRanks = calloc(sizeof(float), numVerts), 
     diff = 0, ep = 0.000001;
 
-   // Basecase
+   // calculate out degrees (n*n)
+   for (i = 0; i < numVerts; i++) {
+      outSum = 0;
+      for (j = 0; j < numVerts; j++) {
+         outSum += graph[j][i];
+      }
+      outDegrees[i] = outSum;
+   }
+
+   // Basecase (n)
    for (i = 0; i < numVerts; i++) {
       newRanks[i] = (float) 1 / numVerts;
       diff += newRanks[i];
@@ -58,9 +68,9 @@ float *runPageRankE(char **graph, int numVerts) {
       memcpy(oldRanks, newRanks, sizeof(float) * numVerts);
       diff = 0;
       
-      // For each node in graph, calculate pagerank
+      // For each node in graph, calculate pagerank (n*n)
       for (i = 0; i < numVerts; i++) {
-         newRanks[i] = calcNodeRank(graph, oldRanks, numVerts, i);
+         newRanks[i] = calcNodeRank(graph, oldRanks, outDegrees, numVerts, i);
          diff += fabsf(oldRanks[i] - newRanks[i]);
       }
 
@@ -72,18 +82,16 @@ float *runPageRankE(char **graph, int numVerts) {
    return newRanks;
 }
 
-float calcNodeRank(char **graph, float *oldRanks, int numVerts, int n) {
+/**
+ * Calculates Page rank for given node N.
+ */
+float calcNodeRank(char **graph, float *oldRanks, int *outDegrees, int numVerts, int n) {
    int i, j, outCount;
    float sum = 0;
 
    for (i = 0; i < numVerts; i++) {
-      if (graph[i][n] != 0) {
-         outCount = 0;
-         // sum up column
-         for (j = 0; j < numVerts; j++) {
-            outCount += graph[i][j];
-         }
-         sum += ((float) oldRanks[i]) / ((float) outCount);
+      if (graph[n][i] != 0) {
+         sum += ((float) oldRanks[i]) / ((float) outDegrees[i]);
       }
    }
 
