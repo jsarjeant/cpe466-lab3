@@ -1,13 +1,17 @@
 CC = icc
-CFLAGS = -g -O3 -debug inline-debug-info -fopenmp 
+CFLAGS = -g -O3 -debug inline-debug-info 
 OBJS = pagerank.o
 OUTPUT = rank 
 
-single:
+serial:
 	$(CC) $(CFLAGS) pagerank.c -c
 	$(CC) $(CFLAGS) $(OBJS) -o $(OUTPUT)
 
-#%.o: %.cpp %.c %.h
+openmp:
+	$(CC) $(CFLAGS) -openmp pagerank.c -c
+	$(CC) $(CFLAGS) -openmp $(OBJS) -o $(OUTPUT)
+
+%.o: %.c %.h
 	#$(CC) $(CFLAGS) -c $<
 
 .PHONY: clean
