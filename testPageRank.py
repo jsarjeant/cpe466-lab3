@@ -7,7 +7,7 @@ graph["C"] = set(["D"])
 graph["D"] = set([])
 graph["E"] = set([])
 
-pr = PageRank(graph, .25)
+pr = PageRank(graph, .25, "test")
 
 
 print "Itterations"
