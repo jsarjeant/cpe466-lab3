@@ -95,7 +95,7 @@ float calcNodeRank(char **graph, float *oldRanks, int *outDegrees, int numVerts,
 #endif
    {
    #ifdef _OPENMP
-   #pragma omp single
+      #pragma omp single
       printf("%d threads running in parallel\n", omp_get_num_threads());
       #pragma omp for reduction(+:sum)
    #endif
