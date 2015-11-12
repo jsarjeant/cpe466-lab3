@@ -25,13 +25,8 @@ class PageRank:
         for n in self.graph:
             self.ranks[n] = 1 / self.numVerts
         # While sum of new rank of nodes - old rank of nodes > e
-        start_time = datetime.now()
-        end_time = datetime.now()
         while True:
-
             self.ittrNum = self.ittrNum + 1
-            start_time = end_time
-
             newRanks = {}
             # Calc PageRank for each node
             for n in self.graph:
@@ -45,7 +40,6 @@ class PageRank:
             # update Ranks
             self.ranks = newRanks
             end_time = datetime.now()
-            print "Time: ", end_time - start_time
 
     def runPageRankI(self, numIttr):
         ittrNum = 0

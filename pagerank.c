@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pagerank.h"
+#include <omp.h>
 
 int main() {
    int i, numVerts = MATRIX_SIZE;
@@ -35,7 +36,7 @@ int main() {
    }
    free(g);
    free(ranks);
-   
+
    return 0;
 }
 
@@ -88,12 +89,21 @@ float *runPageRankE(char **graph, int numVerts) {
 float calcNodeRank(char **graph, float *oldRanks, int *outDegrees, int numVerts, int n) {
    int i, j, outCount;
    float sum = 0;
-
+   
+#ifdef _OPENMP
+   #pragma omp parallel 
+#endif
+   {
+   #ifdef _OPENMP
+      #pragma omp single
+      printf("%d threads running in parallel\n", omp_get_num_threads());
+      #pragma omp for reduction(+:sum)
+   #endif
    for (i = 0; i < numVerts; i++) {
-      if (graph[n][i] != 0) {
+      if(graph[n][i]) {
          sum += ((float) oldRanks[i]) / ((float) outDegrees[i]);
       }
    }
-
+   }
    return (1 - D_VAL) / numVerts + D_VAL * sum;
 }

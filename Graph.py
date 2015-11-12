@@ -40,6 +40,8 @@ class Graph:
                     self.graph.setdefault(nt, set([]))
                     self.graph[nt].add(nf)
 
+        print len(self.graph)
+
     def __print_adjacency_list(self):
         for k, v in self.graph.items():
             print k, " - ", list(v)

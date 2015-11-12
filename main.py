@@ -2,7 +2,7 @@ from Graph import Graph
 from pagerank import PageRank
 import sys
 from datetime import datetime
-
+from graph_2 import create_matrix
 
 def print_time(start_time):
     endTime = datetime.now()
@@ -23,19 +23,20 @@ for arg in sys.argv:
     if "-d" in arg:
         directed = True
 
-    print arg, " == ", "soc-LiveJournal1.txt : ", arg == "soc-LiveJournal1.txt"
+    # print arg, " == ", "soc-LiveJournal1.txt : ", arg == "soc-LiveJournal1.txt"
 
 for fileName in fileNames:
-    total_time = time = datetime.now()
+    #total_time = time = datetime.now()
     print "----------------"
     print "\nCreating graph from", fileName, "..."
-    graph = Graph(fileName, print_adjacency_list, directed)
-    read_time = time = print_time(time)
+    create_matrix(fileName)
+    #graph = Graph(fileName, print_adjacency_list, directed)
+    '''read_time = time = print_time(time)
     print "Generating Page Rank"
     pr = PageRank(graph.return_graph(), .85, fileName)
-    '''print "Itterations"
+    print "Itterations"
     pr.runPageRankI(20)
-    time = print_time(time)'''
+    time = print_time(time)
     print "\nConverge"
     pr.runPageRankE(.000001)
     processing_time = time = print_time(time)
@@ -43,4 +44,5 @@ for fileName in fileNames:
         f.write("Read Time" + '\t' + str(read_time - total_time) + '\n')
         f.write("Processing Time" + '\t' + str(processing_time - total_time) + '\n')
 
-    print "\nTotal Time: ", time - total_time
+    print "\nTotal Time: ", time - total_time'''
+
