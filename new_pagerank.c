@@ -5,7 +5,7 @@
 #include "new_pagerank.h"
 #include <omp.h>
 
-int main() {
+int askbdfmain() {
    int i, j, tmp, count, numVerts = MATRIX_SIZE, 
     outSum, outDegrees[MATRIX_SIZE];
    float *ranks;

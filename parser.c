@@ -2,8 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <search.h>
-#include "pagerank.h"
-#include "uthash.h"
+#include "new_pagerank.h"
 
 int fromIndex, toIndex;
 char arg;
@@ -93,38 +92,76 @@ char** calcNumNodes(char * fileName, char ** nodes, int baseLength) {
     return nodes;
 }
 
-void addEdge(char *** adjList, char *to, char *from, char ** nodesMap, int * adjListCounts) {
+void printNodesMap(char ** nodesMap) {
+    int i = 0;
+    printf("Printing nodes map: %d\n", numNodes);
+    printf("[");
+    for (i = 0; i < numNodes; i++) {
+        printf("%s,", nodesMap[i]);
+    }
+    printf("]\n");
+}
+
+void printAdjList(int ** adjList, char ** nodesMap, int * outDegrees) {
+    int i = 0, ii = 0;
+
+    for (i = 0; i < numNodes; i++) {
+        ii = 0;
+        char * key = nodesMap[i];
+        printf("%s: [",key);
+        if (adjList[i] != NULL) {
+            //printf("%d is not null\n", i);
+            //printf("adjList[%d][%d] = %d\n", i, ii, adjList[i][ii]);
+            while (adjList[i][ii] != -1) {
+                //printf("%d: ", ii);
+                printf("%s, ", nodesMap[adjList[i][ii++]]);
+            }
+            printf("%d", adjList[i][ii]);
+        }
+        printf("]\t%d\n", outDegrees[i]);
+    }
+}
+
+
+void addEdge(int ** adjList, char *to, char *from, char ** nodesMap, int * adjListCounts, int * outDegrees) {
     int index = find(to, nodesMap, numNodes, 0);
     //printf("Index: %d\n", index);
     int innerIndex = 0;
     if (adjList[index] == NULL) {
         //printf("Null at index %d\n", index);
-        adjList[index] = malloc(20 * sizeof(char*));
-        //printf("Malloc Complete\n");
+        adjList[index] = calloc(20, sizeof(int));
+        adjList[index][0] = -1; 
+        //printf("Calloc Complete\n");
+       
         //printf("adjListCounts[%d] = %d\n", index, adjListCounts[index]);
         adjListCounts[index] += 20;
+
         //printf("adjListCounts[%d] = %d\n", index, adjListCounts[index]);
     }    
     
     while(innerIndex < adjListCounts[index]) {
-       // printf("AdjList[%d] = %s\n",index, adjList[index]);
-        if (adjList[index][innerIndex] == NULL) {
-         //   printf("adjList[%d][%d] is NULL\n", index, innerIndex);
-            adjList[index][innerIndex] = malloc(sizeof(MAX_VAL));
-            strcpy(adjList[index][innerIndex], from);
-            printf("%s -> %s\n", to, adjList[index][innerIndex]);
-            return;
+        if (adjList[index][innerIndex] == -1) {
+            //printf("Index %d is %d with length %d\n", innerIndex, adjList[index][innerIndex], adjListCounts[index]);
+            int fromIndex = find(from, nodesMap, numNodes, 0);
+            adjList[index][innerIndex] = fromIndex;
+            outDegrees[fromIndex]++;
+            
+            //printf("Index %d is %d with length %d\n", innerIndex, adjList[index][innerIndex], adjListCounts[index]);
+            if (innerIndex + 1 != adjListCounts[index]) {
+                adjList[index][innerIndex + 1] = -1;
+                //printf("Index %d is %d with length %d\n", innerIndex + 1 , adjList[index][innerIndex + 1], adjListCounts[index]);
+                //printAdjList(adjList, nodesMap);
+                return;
+            }
         }
         ++innerIndex;
     }
     adjListCounts[index] += 20;
-    void * tmp = realloc(adjList[index], adjListCounts[index] * sizeof(char *));
-    adjList[index][innerIndex] = malloc(sizeof(MAX_VAL));
-    strcpy(adjList[index][innerIndex], from);
-    printf("%s -> %s\n", to, adjList[index][innerIndex]);
+    void * tmp = realloc(adjList[index], adjListCounts[index] * sizeof(int));
+//    printf("%s -> %s\n", to, adjList[index][innerIndex]);
 }
 
-void createAdjList(char * fileName, char *** adjList, char ** nodesMap, int * adjListCounts) {
+void createAdjList(char * fileName, int ** adjList, char ** nodesMap, int * adjListCounts, int * outDegrees) {
     FILE *fp = fopen(fileName, "r");
     char line[21];
     int commentCount = 0;
@@ -141,25 +178,13 @@ void createAdjList(char * fileName, char *** adjList, char ** nodesMap, int * ad
         }
         else {
             sscanf(line, format, &from, &to);
-            printf("%s -> %s\n", to, from);
-            addEdge(adjList, to, from, nodesMap, adjListCounts);
-            getchar();
+//            printf("%s -> %s\n", to, from);
+            addEdge(adjList, to, from, nodesMap, adjListCounts, outDegrees);
+//            getchar();
         }
     }
 }
 
-void printAdjList(char *** adjList, char ** nodesMap, int *adjListCounts) {
-    int i = 0, ii = 0;
-
-    for (i = 0; i < numNodes; i++) {
-        char * key = nodesMap[i];
-        printf("%s: [",key);
-        while (adjList[i][ii] != NULL && ii < adjListCounts[i]) {
-            printf("%s, ", adjList[i][ii++]);
-        }
-        printf("]\n");
-    }
-}
 
 int main (int argc, char *argv[]) {
     if (argv[1] != NULL && argv[2] != NULL) {
@@ -173,14 +198,29 @@ int main (int argc, char *argv[]) {
     char ** nodesMap = malloc(20 * sizeof(char*));
     nodesMap = calcNumNodes(argv[1], nodesMap, 20);
     numNodes = -1;
-    while (nodesMap[++numNodes] != NULL);
-
+    while (nodesMap[++numNodes] != NULL); 
+    ///printNodesMap(nodesMap);
     printf("Number of Nodes: %d\n", numNodes); 
 
-    char *** adjList = malloc(numNodes * sizeof(char **));
+    int ** adjList = malloc(numNodes * sizeof(int *));
     int * adjListCounts = calloc(numNodes, sizeof(int));
-    createAdjList(argv[1], adjList, nodesMap, adjListCounts);
-    printAdjList(adjList, nodesMap, adjListCounts);
+    int * outDegrees = calloc(numNodes, sizeof(int));
+    createAdjList(argv[1], adjList, nodesMap, adjListCounts, outDegrees);
+    //printAdjList(adjList, nodesMap, outDegrees);
+    
+    int i = 0;
+    for (i = 0; i < numNodes; i++) {
+        if (adjList[i] == NULL) {
+            adjList[i] = malloc(sizeof(int));
+            adjList[i][0] = -1;
+        }
+    }
+    printf("Starting pagerank calculations\n");
+    float * pageRanks = runPageRankE(adjList, outDegrees, numNodes);
+    for (i = 0; i < numNodes; i++) {
+        printf("%s\t%1.12f\n", nodesMap[i], pageRanks[i]);
+    }
+    free(pageRanks);
     /**char *arr[4]
     int curIndex = 0;
     if (find("a", arr, curIndex, 4) == -1) { curIndex++; }

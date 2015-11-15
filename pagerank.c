@@ -5,7 +5,7 @@
 #include "pagerank.h"
 #include <omp.h>
 
-int main() {
+/**int main() {
    int i, numVerts = MATRIX_SIZE;
    float *ranks;
    // Setup Graph[toIndex][fromIndex]
@@ -38,7 +38,7 @@ int main() {
    free(ranks);
 
    return 0;
-}
+}**/
 
 /** 
  * Calculates Pagerank for a given graph
