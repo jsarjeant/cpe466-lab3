@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pagerank.h"
+#include "new_pagerank.h"
 #include <omp.h>
 
 int main() {
