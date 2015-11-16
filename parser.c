@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <search.h>
+#include <time.h>
 #include "new_pagerank.h"
 
 int fromIndex, toIndex;
@@ -104,7 +105,7 @@ void printNodesMap(char ** nodesMap) {
 
 void printAdjList(int ** adjList, char ** nodesMap, int * outDegrees) {
     int i = 0, ii = 0;
-
+    printf("Printing Adjacency List\n");
     for (i = 0; i < numNodes; i++) {
         ii = 0;
         char * key = nodesMap[i];
@@ -113,8 +114,9 @@ void printAdjList(int ** adjList, char ** nodesMap, int * outDegrees) {
             //printf("%d is not null\n", i);
             //printf("adjList[%d][%d] = %d\n", i, ii, adjList[i][ii]);
             while (adjList[i][ii] != -1) {
-                //printf("%d: ", ii);
-                printf("%s, ", nodesMap[adjList[i][ii++]]);
+                //printf("%d: ", ii); 
+                printf("adjList[%d][%d] = %d", i, ii, adjList[i][ii]);
+                printf(" - %s, \n", nodesMap[adjList[i][ii++]]);
             }
             printf("%d", adjList[i][ii]);
         }
@@ -158,6 +160,18 @@ void addEdge(int ** adjList, char *to, char *from, char ** nodesMap, int * adjLi
     }
     adjListCounts[index] += 20;
     void * tmp = realloc(adjList[index], adjListCounts[index] * sizeof(int));
+    if (tmp != NULL) {
+        adjList[index] = tmp;
+        adjList[index][innerIndex] = -1;
+        return;
+    }
+    else {
+        printf("Error in realloc\n");
+        free(adjList[index]);
+        perror("Realloc Failed");
+        exit(EXIT_FAILURE);
+    }
+
 //    printf("%s -> %s\n", to, adjList[index][innerIndex]);
 }
 
@@ -194,20 +208,24 @@ int main (int argc, char *argv[]) {
         perror("Error: Usage requires a file name and flag inidicating the type of file.\nFlag\tFile Format\n---------------------\n-n\t1,0,2,0\n-t\t\"One\",0,\"Two\",0\n-s\t1\t2\n");
         exit(EXIT_FAILURE);
     }
-
+    time_t startTime, nextTime;
+    time(&startTime);
     char ** nodesMap = malloc(20 * sizeof(char*));
     nodesMap = calcNumNodes(argv[1], nodesMap, 20);
+    time(&nextTime);
+    printf("Creating node map: %f\n", difftime(nextTime, startTime));
+    time(&startTime);
     numNodes = -1;
     while (nodesMap[++numNodes] != NULL); 
-    ///printNodesMap(nodesMap);
+    //printNodesMap(nodesMap);
     printf("Number of Nodes: %d\n", numNodes); 
-
+    //getchar();
     int ** adjList = malloc(numNodes * sizeof(int *));
     int * adjListCounts = calloc(numNodes, sizeof(int));
     int * outDegrees = calloc(numNodes, sizeof(int));
     createAdjList(argv[1], adjList, nodesMap, adjListCounts, outDegrees);
     //printAdjList(adjList, nodesMap, outDegrees);
-    
+    //getchar();
     int i = 0;
     for (i = 0; i < numNodes; i++) {
         if (adjList[i] == NULL) {
@@ -215,11 +233,16 @@ int main (int argc, char *argv[]) {
             adjList[i][0] = -1;
         }
     }
+    time(&nextTime);
+    printf("Creating Adjacency List: %f\n", difftime(nextTime, startTime));
+    time(&startTime);
     printf("Starting pagerank calculations\n");
     float * pageRanks = runPageRankE(adjList, outDegrees, numNodes);
     for (i = 0; i < numNodes; i++) {
         printf("%s\t%1.12f\n", nodesMap[i], pageRanks[i]);
     }
+    time(&nextTime);
+    printf("Running Calculations: %f\n", difftime(nextTime, startTime));
     free(pageRanks);
     /**char *arr[4]
     int curIndex = 0;
