@@ -5,6 +5,8 @@
 #include <time.h>
 #include "new_pagerank.h"
 #include "uthash.h"
+#include "mergesort.c"
+
 int fromIndex, toIndex;
 char arg;
 char *format = NULL;
@@ -260,11 +262,18 @@ int main (int argc, char *argv[]) {
     time(&startTime);
     printf("Starting pagerank calculations\n");
     float * pageRanks = runPageRankE(adjList, outDegrees, numNodes);
+    time(&nextTime);
+    printf("Running Calculations: %f\n", difftime(nextTime, startTime)); 
+    time(&startTime);
+    
+    runMergeSort(pageRanks, nodeKeys, numNodes);
+    time(&nextTime);
+    printf("Sorting results: %f\n", diffTime(nextTime, startTime));
+    getchar();
     for (i = 0; i < numNodes; i++) {
         printf("%s\t%1.12f\n", nodeKeys[i], pageRanks[i]);
     }
     time(&nextTime);
-    printf("Running Calculations: %f\n", difftime(nextTime, startTime));
     free(pageRanks);
     /**char *arr[4]
     int curIndex = 0;
