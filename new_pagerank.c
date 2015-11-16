@@ -97,6 +97,7 @@ float *runPageRankE(int **graph, int *outDegrees, int numVerts) {
 
 
    // Basecase (n)
+   #pragma simd reduction(+:diff)
    for (i = 0; i < numVerts; i++) {
       newRanks[i] = (float) 1 / numVerts;
       diff += newRanks[i];
@@ -109,6 +110,7 @@ float *runPageRankE(int **graph, int *outDegrees, int numVerts) {
       diff = 0;
       
       // For each node in graph, calculate pagerank (n*n)
+      #pragma simd private(i) reduction(+:diff)
       for (i = 0; i < numVerts; i++) {
          newRanks[i] = calcNodeRank(graph, oldRanks, outDegrees, numVerts, i);
          diff += fabsf(oldRanks[i] - newRanks[i]);
@@ -126,8 +128,10 @@ float *runPageRankE(int **graph, int *outDegrees, int numVerts) {
  * Calculates Page rank for given node N.
  */
 float calcNodeRank(int **graph, float *oldRanks, int *outDegrees, int numVerts, int n) {
-   int i, j, outCount;
+   int i = 0, j = 0, outCount, num = 0;
    float sum = 0;
+
+   //while(graph[n][i] != -1)
    
 /*#ifdef _OPENMP
    #pragma omp parallel 

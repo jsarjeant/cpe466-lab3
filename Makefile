@@ -1,5 +1,5 @@
 CC = icc
-CFLAGS = -g -O3 -debug inline-debug-info -shared-intel 
+CFLAGS = -g -O3 -debug inline-debug-info -shared-intel -vec-report3 
 OBJS = new_pagerank.o parser.o mergesort.o
 OUTPUT = rank 
 

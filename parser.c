@@ -6,6 +6,14 @@
 #include "new_pagerank.h"
 #include "uthash.h"
 
+#define MICROSEC_CONV 1000000.0
+
+static double sys_time() {
+   struct timeval time;
+   gettimeofday(&time, NULL);
+   return time.tv_sec + (time.tv_usec / MICROSEC_CONV);
+}
+
 int fromIndex, toIndex;
 char arg;
 char *format = NULL;
@@ -230,15 +238,15 @@ int main (int argc, char *argv[]) {
         perror("Error: Usage requires a file name and flag inidicating the type of file.\nFlag\tFile Format\n---------------------\n-n\t1,0,2,0\n-t\t\"One\",0,\"Two\",0\n-s\t1\t2\n");
         exit(EXIT_FAILURE);
     }
-    time_t startTime, nextTime;
-    time(&startTime);
+    double start, end;
+    start = sys_time();
     char ** nodeKeys = malloc(20 * sizeof(char*));
     struct node **nodesMap = calloc(1, sizeof(struct node *));
     nodeKeys = calcNumNodes(argv[1], nodesMap, nodeKeys, 20);
-    time(&nextTime);
-    printf("Creating node map: %f\n", difftime(nextTime, startTime));
-    time(&startTime);
+    end = sys_time();
+    printf("Creating node map: %f\n", end-start);
     
+    start = sys_time(); 
     //while (nodesMap[++numNodes] != NULL); 
     //printNodesMap(nodeKeys);
     printf("Number of Nodes: %d\n", numNodes); 
@@ -256,23 +264,24 @@ int main (int argc, char *argv[]) {
             adjList[i][0] = -1;
         }
     }
-    time(&nextTime);
-    printf("Creating Adjacency List: %f\n", difftime(nextTime, startTime));
-    time(&startTime);
+    end = sys_time();
+    printf("Creating Adjacency List: %f\n", end-start);
+
+    start = sys_time(); 
     printf("Starting pagerank calculations\n");
     float * pageRanks = runPageRankE(adjList, outDegrees, numNodes);
-    time(&nextTime);
-    printf("Running Calculations: %f\n", difftime(nextTime, startTime)); 
-    time(&startTime);
-    
+    end = sys_time();
+    printf("Running Calculations: %f\n", end-start); 
+
+    start = sys_time(); 
     runMergeSort(pageRanks, nodeKeys, numNodes);
-    time(&nextTime);
-    printf("Sorting results: %f\n", difftime(nextTime, startTime));
+    end = sys_time();
+    printf("Sorting rankings: %f\n", end-start);
     //getchar();
     for (i = 0; i < 10; i++) {
         printf("%s\t%1.12f\n", nodeKeys[i], pageRanks[i]);
     }
-    time(&nextTime);
+
     _mm_free(pageRanks);
     /**char *arr[4]
     int curIndex = 0;
