@@ -139,16 +139,20 @@ void printAdjList(int ** adjList, char ** nodesMap, int * outDegrees) {
     for (i = 0; i < numNodes; i++) {
         ii = 0;
         char * key = nodesMap[i];
-        printf("%s: [",key);
+        printf("%s",key);
         if (adjList[i] != NULL) {
             //printf("%d is not null\n", i);
             //printf("adjList[%d][%d] = %d\n", i, ii, adjList[i][ii]);
-            while (adjList[i][ii] != -1) {
-                //printf("%d: ", ii); 
-                printf("adjList[%d][%d] = %d", i, ii, adjList[i][ii]);
-                printf(" - %s, \n", nodesMap[adjList[i][ii++]]);
+            printf("(%d): [", adjList[i][0]); 
+            for (ii = 1; ii <= adjList[i][0]; ii++) {
+               //printf("%d: ", ii); 
+               //printf("adjList[%d][%d] = %d", i, ii, adjList[i][ii]);
+               printf("%s, ", nodesMap[adjList[i][ii]]);
             }
-            printf("%d", adjList[i][ii]);
+        }
+        else {
+            printf("*******ERROR*********\n");
+            getchar();
         }
         printf("]\t%d\n", outDegrees[i]);
     }
@@ -157,42 +161,30 @@ void printAdjList(int ** adjList, char ** nodesMap, int * outDegrees) {
 
 void addEdge(int ** adjList, char *to, char *from, struct node ** nodesMap, char ** nodeKeys, int * adjListCounts, int * outDegrees) {
     int index = find(to, nodesMap, nodeKeys, numNodes, 0);
-    //printf("Index: %d\n", index);
-    int innerIndex = 0;
+    //printf("Index of %s: %d\n", to, index);    
     if (adjList[index] == NULL) {
-        //printf("Null at index %d\n", index);
+    //    printf("Is Null\n");
         adjList[index] = calloc(20, sizeof(int));
-        adjList[index][0] = -1; 
-        //printf("Calloc Complete\n");
-       
-        //printf("adjListCounts[%d] = %d\n", index, adjListCounts[index]);
-        adjListCounts[index] += 20;
-
-        //printf("adjListCounts[%d] = %d\n", index, adjListCounts[index]);
-    }    
-    
-    while(innerIndex < adjListCounts[index]) {
-        if (adjList[index][innerIndex] == -1) {
-            //printf("Index %d is %d with length %d\n", innerIndex, adjList[index][innerIndex], adjListCounts[index]);
-            int fromIndex = find(from, nodesMap, nodeKeys, numNodes, 0);
-            adjList[index][innerIndex] = fromIndex;
-            outDegrees[fromIndex]++;
-            
-            //printf("Index %d is %d with length %d\n", innerIndex, adjList[index][innerIndex], adjListCounts[index]);
-            if (innerIndex + 1 != adjListCounts[index]) {
-                adjList[index][innerIndex + 1] = -1;
-                //printf("Index %d is %d with length %d\n", innerIndex + 1 , adjList[index][innerIndex + 1], adjListCounts[index]);
-                //printAdjList(adjList, nodesMap);
-                return;
-            }
-        }
-        ++innerIndex;
+        adjListCounts[index] = 1;
     }
-    adjListCounts[index] += 20;
-    void * tmp = realloc(adjList[index], adjListCounts[index] * sizeof(int));
+
+    int innerIndex = adjListCounts[index];
+    //printf("Inner Index: %d\n", innerIndex);
+    int fromIndex = find(from, nodesMap, nodeKeys, numNodes, 0);
+    adjList[index][innerIndex++] = fromIndex;
+    //printf("adjList[%d][%d] = %d(%d)\n", index, innerIndex - 1, adjList[index][innerIndex - 1], fromIndex); 
+    outDegrees[fromIndex]++;
+             
+    adjListCounts[index] = innerIndex;
+    if (innerIndex % 20) {
+        //printf("%d % 20 != 0\n", innerIndex);
+        //getchar();
+        return;
+    }
+
+    void * tmp = realloc(adjList[index], (adjListCounts[index] + 20) * sizeof(int));
     if (tmp != NULL) {
         adjList[index] = tmp;
-        adjList[index][innerIndex] = -1;
         return;
     }
     else {
@@ -201,8 +193,7 @@ void addEdge(int ** adjList, char *to, char *from, struct node ** nodesMap, char
         perror("Realloc Failed");
         exit(EXIT_FAILURE);
     }
-
-//    printf("%s -> %s\n", to, adjList[index][innerIndex]);
+    getchar();
 }
 
 void createAdjList(char * fileName, int ** adjList, struct node ** nodesMap, char ** nodeKeys, int * adjListCounts, int * outDegrees) {
@@ -222,13 +213,23 @@ void createAdjList(char * fileName, int ** adjList, struct node ** nodesMap, cha
         }
         else {
             sscanf(line, format, &from, &to);
-//            printf("%s -> %s\n", to, from);
+ //           printf("%s -> %s\n", to, from);
             addEdge(adjList, to, from, nodesMap, nodeKeys, adjListCounts, outDegrees);
 //            getchar();
         }
     }
 }
-
+ 
+void completeAdjList(int ** adjList, int * adjListCounts) {
+    int i = 0;
+    for (i; i < numNodes; i++) {
+        if (adjList[i] == NULL) {
+            adjList[i] = calloc(1, sizeof(int));
+            adjListCounts[i] = 1;
+        }
+        adjList[i][0] = adjListCounts[i] - 1;
+    }
+}
 
 int main (int argc, char *argv[]) {
     if (argv[1] != NULL && argv[2] != NULL) {
@@ -255,15 +256,10 @@ int main (int argc, char *argv[]) {
     int * adjListCounts = calloc(numNodes, sizeof(int));
     int * outDegrees = calloc(numNodes, sizeof(int));
     createAdjList(argv[1], adjList, nodesMap, nodeKeys, adjListCounts, outDegrees);
-    //printAdjList(adjList, nodesMap, outDegrees);
     //getchar();
-    int i = 0;
-    for (i = 0; i < numNodes; i++) {
-        if (adjList[i] == NULL) {
-            adjList[i] = malloc(sizeof(int));
-            adjList[i][0] = -1;
-        }
-    }
+    completeAdjList(adjList, adjListCounts);
+    //printAdjList(adjList, nodeKeys, outDegrees);
+    //getchar();
     end = sys_time();
     printf("Creating Adjacency List: %f\n", end-start);
 
@@ -272,7 +268,10 @@ int main (int argc, char *argv[]) {
     float * pageRanks = runPageRankE(adjList, outDegrees, numNodes);
     end = sys_time();
     printf("Running Calculations: %f\n", end-start); 
-
+    int  i = 0;
+    for (i = 0; i < 10; i++) {
+        printf("%s\t%1.12f\n", nodeKeys[i], pageRanks[i]);
+    }
     start = sys_time(); 
     runMergeSort(pageRanks, nodeKeys, numNodes);
     end = sys_time();

@@ -143,7 +143,7 @@ float calcNodeRank(int **graph, float *oldRanks, int *outDegrees, int numVerts, 
       #pragma omp for reduction(+:sum)
    #endif*/
    // while there are still in nodes, add to sum
-   for (i = 0; graph[n][i] != -1; i++) {
+   for (i = 1; i <= graph[n][0]; i++) {
          sum += ((float) oldRanks[graph[n][i]]) / ((float) outDegrees[graph[n][i]]);
    }
   // }
