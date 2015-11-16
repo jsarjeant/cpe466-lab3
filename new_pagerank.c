@@ -107,7 +107,7 @@ float *runPageRankE(int **graph, int *outDegrees, int numVerts) {
          diff += fabsf(oldRanks[i] - newRanks[i]);
       }
 
-      printf("\n%d. diff: %f\n", ittrCount, diff);
+    //  printf("\n%d. diff: %f\n", ittrCount, diff);
    }
    
    free(oldRanks);

@@ -4,12 +4,18 @@
 #include <search.h>
 #include <time.h>
 #include "new_pagerank.h"
-
+#include "uthash.h"
 int fromIndex, toIndex;
 char arg;
 char *format = NULL;
 int MAX_VAL = 4847571; 
-int numNodes;
+int numNodes = 0;
+
+struct node {
+    char *key;
+    int index;
+    UT_hash_handle hh;
+};
 
 void processArg(char argument) {
     arg = argument;
@@ -26,18 +32,33 @@ void processArg(char argument) {
     }
 }
 
-int find (char * element, char ** array, int currentIndex, int arrayLength) {
-    int i = 0;
-    while (i < currentIndex) {
-        if (strcmp(element, array[i]) == 0) {
-            return i;
-        }
-        ++i;
-    }
+int find (char * element, struct node **nodesMap, char ** array, int currentIndex, int arrayLength) {
+    struct node *n;
+    HASH_FIND_STR(*nodesMap, element, n);
+    char * key;
 
-    array[currentIndex] = malloc(20);
-    strcpy(array[currentIndex], element);
-    return -1;
+    if (!n) {
+        n = (struct node*) malloc(sizeof(struct node));
+        //printf("Finding %s\n", element);
+        int keyLen = strlen(element);
+        key = malloc(keyLen + 1);
+        strcpy(key, element);
+        n->key = key;
+        n->index = currentIndex;
+        HASH_ADD_KEYPTR(hh, *nodesMap, n->key, keyLen, n);
+        
+        array[currentIndex] = malloc(keyLen + 1);
+        strcpy(array[currentIndex], element);
+        
+        numNodes++;
+        /*struct node *tmp;
+        HASH_ITER(hh, *nodesMap, n, tmp) {
+            printf("Key: %s\n", n->key);
+        }
+        getchar();*/
+        return -1;
+    }
+    return n->index;
 }
 
 char ** increaseNodesSpace(char ** nodes, int newSize) {
@@ -55,12 +76,12 @@ char ** increaseNodesSpace(char ** nodes, int newSize) {
 }
 
 
-char** calcNumNodes(char * fileName, char ** nodes, int baseLength) {
+char ** calcNumNodes(char * fileName, struct node **nodesMap, char ** nodes, int baseLength) {
     FILE *fp = fopen(fileName, "r");
     char line[21];
     int nodesLength = baseLength;
     
-    int numNodes = 0, commentCount = 0, currentIndex = 0;
+    int commentCount = 0, currentIndex = 0;
     char from[10], to[10];
     void * tmp;
 
@@ -75,13 +96,13 @@ char** calcNumNodes(char * fileName, char ** nodes, int baseLength) {
         }
         else {
             sscanf(line, format, &from, &to);
-            if (find(from, nodes, currentIndex, nodesLength) == -1) { 
+            if (find(from, nodesMap, nodes, currentIndex, nodesLength) == -1) { 
                 if (++currentIndex >= nodesLength) {
                     nodesLength += baseLength;
                     nodes = increaseNodesSpace(nodes, nodesLength);  
                 } 
             }
-            if (find(to, nodes, currentIndex, nodesLength) == -1) {
+            if (find(to, nodesMap, nodes, currentIndex, nodesLength) == -1) {
                 if (++currentIndex >= nodesLength) {
                     nodesLength += baseLength;
                     nodes = increaseNodesSpace(nodes, nodesLength);
@@ -125,8 +146,8 @@ void printAdjList(int ** adjList, char ** nodesMap, int * outDegrees) {
 }
 
 
-void addEdge(int ** adjList, char *to, char *from, char ** nodesMap, int * adjListCounts, int * outDegrees) {
-    int index = find(to, nodesMap, numNodes, 0);
+void addEdge(int ** adjList, char *to, char *from, struct node ** nodesMap, char ** nodeKeys, int * adjListCounts, int * outDegrees) {
+    int index = find(to, nodesMap, nodeKeys, numNodes, 0);
     //printf("Index: %d\n", index);
     int innerIndex = 0;
     if (adjList[index] == NULL) {
@@ -144,7 +165,7 @@ void addEdge(int ** adjList, char *to, char *from, char ** nodesMap, int * adjLi
     while(innerIndex < adjListCounts[index]) {
         if (adjList[index][innerIndex] == -1) {
             //printf("Index %d is %d with length %d\n", innerIndex, adjList[index][innerIndex], adjListCounts[index]);
-            int fromIndex = find(from, nodesMap, numNodes, 0);
+            int fromIndex = find(from, nodesMap, nodeKeys, numNodes, 0);
             adjList[index][innerIndex] = fromIndex;
             outDegrees[fromIndex]++;
             
@@ -175,7 +196,7 @@ void addEdge(int ** adjList, char *to, char *from, char ** nodesMap, int * adjLi
 //    printf("%s -> %s\n", to, adjList[index][innerIndex]);
 }
 
-void createAdjList(char * fileName, int ** adjList, char ** nodesMap, int * adjListCounts, int * outDegrees) {
+void createAdjList(char * fileName, int ** adjList, struct node ** nodesMap, char ** nodeKeys, int * adjListCounts, int * outDegrees) {
     FILE *fp = fopen(fileName, "r");
     char line[21];
     int commentCount = 0;
@@ -193,7 +214,7 @@ void createAdjList(char * fileName, int ** adjList, char ** nodesMap, int * adjL
         else {
             sscanf(line, format, &from, &to);
 //            printf("%s -> %s\n", to, from);
-            addEdge(adjList, to, from, nodesMap, adjListCounts, outDegrees);
+            addEdge(adjList, to, from, nodesMap, nodeKeys, adjListCounts, outDegrees);
 //            getchar();
         }
     }
@@ -210,20 +231,21 @@ int main (int argc, char *argv[]) {
     }
     time_t startTime, nextTime;
     time(&startTime);
-    char ** nodesMap = malloc(20 * sizeof(char*));
-    nodesMap = calcNumNodes(argv[1], nodesMap, 20);
+    char ** nodeKeys = malloc(20 * sizeof(char*));
+    struct node **nodesMap = calloc(1, sizeof(struct node *));
+    nodeKeys = calcNumNodes(argv[1], nodesMap, nodeKeys, 20);
     time(&nextTime);
     printf("Creating node map: %f\n", difftime(nextTime, startTime));
     time(&startTime);
-    numNodes = -1;
-    while (nodesMap[++numNodes] != NULL); 
-    //printNodesMap(nodesMap);
+    
+    //while (nodesMap[++numNodes] != NULL); 
+    //printNodesMap(nodeKeys);
     printf("Number of Nodes: %d\n", numNodes); 
     //getchar();
     int ** adjList = malloc(numNodes * sizeof(int *));
     int * adjListCounts = calloc(numNodes, sizeof(int));
     int * outDegrees = calloc(numNodes, sizeof(int));
-    createAdjList(argv[1], adjList, nodesMap, adjListCounts, outDegrees);
+    createAdjList(argv[1], adjList, nodesMap, nodeKeys, adjListCounts, outDegrees);
     //printAdjList(adjList, nodesMap, outDegrees);
     //getchar();
     int i = 0;
@@ -239,7 +261,7 @@ int main (int argc, char *argv[]) {
     printf("Starting pagerank calculations\n");
     float * pageRanks = runPageRankE(adjList, outDegrees, numNodes);
     for (i = 0; i < numNodes; i++) {
-        printf("%s\t%1.12f\n", nodesMap[i], pageRanks[i]);
+        printf("%s\t%1.12f\n", nodeKeys[i], pageRanks[i]);
     }
     time(&nextTime);
     printf("Running Calculations: %f\n", difftime(nextTime, startTime));
