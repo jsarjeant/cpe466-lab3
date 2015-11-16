@@ -85,9 +85,16 @@ int askbdfmain() {
  */
 float *runPageRankE(int **graph, int *outDegrees, int numVerts) {
    int i, j, ittrCount = 0;
-   float *oldRanks = calloc(sizeof(float), numVerts), 
-    *newRanks = calloc(sizeof(float), numVerts), 
+   float *oldRanks = _mm_malloc(sizeof(float) * numVerts, 64),
+    *newRanks = _mm_malloc(sizeof(float) * numVerts, 64),
     diff = 0, ep = 0.000001;
+   
+   __assume_aligned(oldRanks, 64);
+   __assume_aligned(newRanks, 64);
+
+   memset(oldRanks, 0, sizeof(float)*numVerts);
+   memset(newRanks, 0, sizeof(float)*numVerts);
+
 
    // Basecase (n)
    for (i = 0; i < numVerts; i++) {
@@ -110,7 +117,7 @@ float *runPageRankE(int **graph, int *outDegrees, int numVerts) {
     //  printf("\n%d. diff: %f\n", ittrCount, diff);
    }
    
-   free(oldRanks);
+   _mm_free(oldRanks);
 
    return newRanks;
 }

@@ -268,12 +268,12 @@ int main (int argc, char *argv[]) {
     runMergeSort(pageRanks, nodeKeys, numNodes);
     time(&nextTime);
     printf("Sorting results: %f\n", difftime(nextTime, startTime));
-    getchar();
-    for (i = 0; i < 20; i++) {
+    //getchar();
+    for (i = 0; i < 10; i++) {
         printf("%s\t%1.12f\n", nodeKeys[i], pageRanks[i]);
     }
     time(&nextTime);
-    free(pageRanks);
+    _mm_free(pageRanks);
     /**char *arr[4]
     int curIndex = 0;
     if (find("a", arr, curIndex, 4) == -1) { curIndex++; }
