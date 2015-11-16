@@ -136,9 +136,10 @@ void mergesort_serial(float* a, char** names, int size, float* temp, char** temp
 		if (a[0] > a[1])
 			return;
 		else {
-			SWAP(a[0], a[1]);
-         SWAPNAME(tempNames[0], tempNames[1]); 
-			return;
+            SWAP(a[0], a[1]);
+            SWAPNAME(names[0], names[1]); 
+			
+            return;
 		}
 	}
 

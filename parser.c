@@ -269,15 +269,12 @@ int main (int argc, char *argv[]) {
     end = sys_time();
     printf("Running Calculations: %f\n", end-start); 
     int  i = 0;
-    for (i = 0; i < 10; i++) {
-        printf("%s\t%1.12f\n", nodeKeys[i], pageRanks[i]);
-    }
     start = sys_time(); 
     runMergeSort(pageRanks, nodeKeys, numNodes);
     end = sys_time();
     printf("Sorting rankings: %f\n", end-start);
     //getchar();
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < numNodes; i++) {
         printf("%s\t%1.12f\n", nodeKeys[i], pageRanks[i]);
     }
 
