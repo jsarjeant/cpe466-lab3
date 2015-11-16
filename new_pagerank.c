@@ -122,7 +122,7 @@ float calcNodeRank(int **graph, float *oldRanks, int *outDegrees, int numVerts, 
    int i, j, outCount;
    float sum = 0;
    
-#ifdef _OPENMP
+/*#ifdef _OPENMP
    #pragma omp parallel 
 #endif
    {
@@ -130,11 +130,11 @@ float calcNodeRank(int **graph, float *oldRanks, int *outDegrees, int numVerts, 
       #pragma omp single
       printf("%d threads running in parallel\n", omp_get_num_threads());
       #pragma omp for reduction(+:sum)
-   #endif
+   #endif*/
    // while there are still in nodes, add to sum
    for (i = 0; graph[n][i] != -1; i++) {
          sum += ((float) oldRanks[graph[n][i]]) / ((float) outDegrees[graph[n][i]]);
    }
-   }
+  // }
    return (1 - D_VAL) / numVerts + D_VAL * sum;
 }

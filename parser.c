@@ -5,7 +5,6 @@
 #include <time.h>
 #include "new_pagerank.h"
 #include "uthash.h"
-#include "mergesort.c"
 
 int fromIndex, toIndex;
 char arg;
@@ -268,9 +267,9 @@ int main (int argc, char *argv[]) {
     
     runMergeSort(pageRanks, nodeKeys, numNodes);
     time(&nextTime);
-    printf("Sorting results: %f\n", diffTime(nextTime, startTime));
+    printf("Sorting results: %f\n", difftime(nextTime, startTime));
     getchar();
-    for (i = 0; i < numNodes; i++) {
+    for (i = 0; i < 20; i++) {
         printf("%s\t%1.12f\n", nodeKeys[i], pageRanks[i]);
     }
     time(&nextTime);
