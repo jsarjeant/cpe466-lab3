@@ -78,7 +78,7 @@ void tearDown(double start, double end, float* a, int size) {
 	printf("Time to execute: %f\n", end-start);
 	
 	for (i = 0; i < size-1; ++i) {
-		sorted &= (a[i] > a[i+1]);
+		sorted &= (a[i] >= a[i+1]);
 	}
 
 	printf("Array sorted: %d\n", sorted);
