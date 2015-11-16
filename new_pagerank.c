@@ -5,7 +5,7 @@
 #include "new_pagerank.h"
 #include <omp.h>
 
-int main() {
+int askbdfmain() {
    int i, j, tmp, count, numVerts = MATRIX_SIZE, 
     outSum, outDegrees[MATRIX_SIZE];
    float *ranks;
@@ -107,7 +107,7 @@ float *runPageRankE(int **graph, int *outDegrees, int numVerts) {
          diff += fabsf(oldRanks[i] - newRanks[i]);
       }
 
-      printf("\n%d. diff: %f\n", ittrCount, diff);
+    //  printf("\n%d. diff: %f\n", ittrCount, diff);
    }
    
    free(oldRanks);
