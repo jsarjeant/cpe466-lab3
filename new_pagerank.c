@@ -87,7 +87,7 @@ float *runPageRankE(int **graph, int *outDegrees, int numVerts) {
    int i, j, ittrCount = 0;
    float *oldRanks = _mm_malloc(sizeof(float) * numVerts, 32),
     *newRanks = _mm_malloc(sizeof(float) * numVerts, 32),
-    diff = 0, ep = 0.000001, sum = 0;
+    diff = 0, ep = 0.000001, sum = 0, localdiff;
    
    __assume_aligned(oldRanks, 32);
    __assume_aligned(newRanks, 32);
@@ -108,19 +108,20 @@ float *runPageRankE(int **graph, int *outDegrees, int numVerts) {
       ittrCount++;
       memcpy(oldRanks, newRanks, sizeof(float) * numVerts);
       diff = sum = 0;
-      
+       
       #pragma omp parallel
       {  
       // For each node in graph, calculate pagerank (n*n)
-      #pragma omp for private(i,j,sum) reduction(+:diff)
+      #pragma omp for simd reduction(+:diff) private(i,j,sum)
       for (i = 0; i < numVerts; i++) {
          sum = 0;
+         //#pragma simd reduction(+:sum)
          for (j = 1; j <= graph[i][0]; j++) {
             sum += ((float) oldRanks[graph[i][j]]) / ((float) outDegrees[graph[i][j]]);
          }
-
+         
          newRanks[i] = (1 - D_VAL) / numVerts + D_VAL * sum;
-         diff += fabsf(oldRanks[i] - newRanks[i]);
+         diff += fabsf(newRanks[i] - oldRanks[i]); 
       }
       }
 
