@@ -85,12 +85,12 @@ int askbdfmain() {
  */
 float *runPageRankE(int **graph, int *outDegrees, int numVerts) {
    int i, j, ittrCount = 0;
-   float *oldRanks = _mm_malloc(sizeof(float) * numVerts, 64),
-    *newRanks = _mm_malloc(sizeof(float) * numVerts, 64),
-    diff = 0, ep = 0.000001;
+   float *oldRanks = _mm_malloc(sizeof(float) * numVerts, 32),
+    *newRanks = _mm_malloc(sizeof(float) * numVerts, 32),
+    diff = 0, ep = 0.000001, sum = 0;
    
-   __assume_aligned(oldRanks, 64);
-   __assume_aligned(newRanks, 64);
+   __assume_aligned(oldRanks, 32);
+   __assume_aligned(newRanks, 32);
 
    memset(oldRanks, 0, sizeof(float)*numVerts);
    memset(newRanks, 0, sizeof(float)*numVerts);
@@ -107,18 +107,25 @@ float *runPageRankE(int **graph, int *outDegrees, int numVerts) {
    while (diff >= ep) {
       ittrCount++;
       memcpy(oldRanks, newRanks, sizeof(float) * numVerts);
-      diff = 0;
+      diff = sum = 0;
       
+      #pragma omp parallel
+      {  
       // For each node in graph, calculate pagerank (n*n)
-      #pragma simd private(i) reduction(+:diff)
+      #pragma omp for private(i,j,sum) reduction(+:diff)
       for (i = 0; i < numVerts; i++) {
-         newRanks[i] = calcNodeRank(graph, oldRanks, outDegrees, numVerts, i);
+         sum = 0;
+         for (j = 1; j <= graph[i][0]; j++) {
+            sum += ((float) oldRanks[graph[i][j]]) / ((float) outDegrees[graph[i][j]]);
+         }
+
+         newRanks[i] = (1 - D_VAL) / numVerts + D_VAL * sum;
          diff += fabsf(oldRanks[i] - newRanks[i]);
+      }
       }
 
     //  printf("\n%d. diff: %f\n", ittrCount, diff);
    }
-   
    _mm_free(oldRanks);
 
    return newRanks;
@@ -143,6 +150,7 @@ float calcNodeRank(int **graph, float *oldRanks, int *outDegrees, int numVerts, 
       #pragma omp for reduction(+:sum)
    #endif*/
    // while there are still in nodes, add to sum
+   //#pragma simd reduction(+:sum)
    for (i = 1; i <= graph[n][0]; i++) {
          sum += ((float) oldRanks[graph[n][i]]) / ((float) outDegrees[graph[n][i]]);
    }

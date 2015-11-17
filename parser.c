@@ -264,6 +264,13 @@ int main (int argc, char *argv[]) {
     printf("Creating Adjacency List: %f\n", end-start);
 
     start = sys_time(); 
+	 #pragma omp parallel
+	 { 
+		 #pragma omp master
+		 {
+          printf("Num threads created: %d\n", omp_get_num_threads());
+		 }
+	 }
     printf("Starting pagerank calculations\n");
     float * pageRanks = runPageRankE(adjList, outDegrees, numNodes);
     end = sys_time();
@@ -274,7 +281,7 @@ int main (int argc, char *argv[]) {
     end = sys_time();
     printf("Sorting rankings: %f\n", end-start);
     //getchar();
-    for (i = 0; i < numNodes; i++) {
+    for (i = 0; i < 10; i++) {
         printf("%s\t%1.12f\n", nodeKeys[i], pageRanks[i]);
     }
 
