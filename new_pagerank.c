@@ -112,10 +112,10 @@ float *runPageRankE(int **graph, int *outDegrees, int numVerts) {
       #pragma omp parallel
       {  
       // For each node in graph, calculate pagerank (n*n)
-      #pragma omp for simd reduction(+:diff) private(i,j,sum)
+      #pragma omp for reduction(+:diff) private(i,j,sum)
       for (i = 0; i < numVerts; i++) {
          sum = 0;
-         //#pragma simd reduction(+:sum)
+         #pragma simd reduction(+:sum)
          for (j = 1; j <= graph[i][0]; j++) {
             sum += ((float) oldRanks[graph[i][j]]) / ((float) outDegrees[graph[i][j]]);
          }

@@ -230,18 +230,44 @@ void createAdjList(char * fileName, int ** adjList, struct node ** nodesMap, cha
     }
 }
  
-void completeAdjList(int ** adjList, int * adjListCounts) {
+int completeAdjList(int ** adjList, int * adjListCounts) {
     int i = 0;
+    int total = 0;
     for (; i < numNodes; i++) {
         if (adjList[i] == NULL) {
             adjList[i] = (int*)calloc(1, sizeof(int));
             adjListCounts[i] = 1;
         }
         adjList[i][0] = adjListCounts[i] - 1;
+        total += adjListCounts[i];
     }
+    return total;
 }
 
+void populateList(int *list, int *listIndexes, int **adjList) {
+   int i = 0, currentIndex = 0, length, j = 0;
+   for (i; i < numNodes; i++) {
+      listIndexes[i] = currentIndex;
+      length = adjList[i][0] + 1;
+      memcpy(list + currentIndex, adjList[i], length * sizeof(int));
+      currentIndex += length;
+   }
+}
 
+void printList(int *list, int * listIndexes, int total, char ** nodeKeys) {
+  int i = 0;
+  printf("[");
+  for (i; i < total; i++) {
+   printf("%s, ", nodeKeys[list[i]]);
+  }
+  printf("]\n");
+
+  printf("[");
+  for (i = 0; i < numNodes; i++) {
+    printf("%d, ", listIndexes[i]);
+  }
+  printf("]\n");
+}
 
 int main (int argc, char *argv[]) {
     if (argv[1] != NULL && argv[2] != NULL) {
@@ -270,8 +296,13 @@ int main (int argc, char *argv[]) {
     int * outDegrees = (int*)calloc(numNodes, sizeof(int));
     createAdjList(argv[1], adjList, nodesMap, nodeKeys, adjListCounts, outDegrees);
     //getchar();
-    completeAdjList(adjList, adjListCounts);
-    //printAdjList(adjList, nodeKeys, outDegrees);
+    int total = completeAdjList(adjList, adjListCounts);
+    int *list = (int *)malloc(total * sizeof(int));
+    int *listIndexes = (int *)malloc(numNodes*sizeof(int));
+
+    populateList(list, listIndexes, adjList);
+    printAdjList(adjList, nodeKeys, outDegrees);
+    printList(list, listIndexes, total, nodeKeys);
     //getchar();
     end = sys_time();
     printf("Creating Adjacency List: %f\n", end-start);
