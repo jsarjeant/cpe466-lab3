@@ -87,7 +87,7 @@ float *runPageRankE(int **graph, int *outDegrees, int numVerts) {
    int i, j, ittrCount = 0;
    float *oldRanks = _mm_malloc(sizeof(float) * numVerts, 64),
     *newRanks = _mm_malloc(sizeof(float) * numVerts, 64),
-    diff = 0, ep = 0.000001;
+    diff = 0, ep = 0.0001;
    
    __assume_aligned(oldRanks, 64);
    __assume_aligned(newRanks, 64);

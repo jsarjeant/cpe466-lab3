@@ -2,8 +2,8 @@
 #define PAGERANK_H
 
 #define MATRIX_SIZE 5
-#define D_VAL .85
-
+#define D_VAL .95
+#define EPSILON .0001
 float *runPageRankE(int **, int *, int);
 float calcNodeRank(int **, float *, int *, int, int);
 

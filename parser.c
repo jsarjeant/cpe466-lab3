@@ -32,7 +32,7 @@ void processArg(char argument) {
     if (arg == 't' || arg == 'n') {
         fromIndex = 0;
         toIndex = 2;
-        format = "%[^','],%*[^','],%[^','],%*[^',']"; 
+        format = "%[^','], %*[^','], %[^','], %*[^',']"; 
     }
     else {
         fromIndex = 0;
@@ -87,34 +87,40 @@ char ** increaseNodesSpace(char ** nodes, int newSize) {
 
 char ** calcNumNodes(char * fileName, struct node **nodesMap, char ** nodes, int baseLength) {
     FILE *fp = fopen(fileName, "r");
-    char line[21];
+    char line[65];
     int nodesLength = baseLength;
     
     int commentCount = 0, currentIndex = 0;
-    char from[10], to[10];
+    char from[30], to[30];
     void * tmp;
+    int varsRead;
 
-    while (fgets(line, 21, fp) != NULL) {
+    while (fgets(line, 65, fp) != NULL) {
         if (line[0] == '#') {
             commentCount++;
-            while (fgets(line, 21, fp) != NULL && commentCount < 4) {
+            while (fgets(line, 65, fp) != NULL && commentCount < 4) {
                 if (line[0] == '#') {
                     commentCount++;
                 }
             } 
         }
         else {
-            sscanf(line, format, &from, &to);
-            if (find(from, nodesMap, nodes, currentIndex, nodesLength) == -1) { 
-                if (++currentIndex >= nodesLength) {
-                    nodesLength += baseLength;
-                    nodes = increaseNodesSpace(nodes, nodesLength);  
-                } 
-            }
-            if (find(to, nodesMap, nodes, currentIndex, nodesLength) == -1) {
-                if (++currentIndex >= nodesLength) {
-                    nodesLength += baseLength;
-                    nodes = increaseNodesSpace(nodes, nodesLength);
+            //printf("Scanning...\n");
+            varsRead = sscanf(line, format, &to, &from);
+            //printf("*%s*\n%s->%s\n%d\n", line, from, to, strcmp(line, "\n"));
+            //getchar();
+            if (strcmp(line, "\n") && varsRead == 2) {
+                if (find(from, nodesMap, nodes, currentIndex, nodesLength) == -1) { 
+                    if (++currentIndex >= nodesLength) {
+                        nodesLength += baseLength;
+                        nodes = increaseNodesSpace(nodes, nodesLength);  
+                    } 
+                }
+                if (find(to, nodesMap, nodes, currentIndex, nodesLength) == -1) {
+                    if (++currentIndex >= nodesLength) {
+                        nodesLength += baseLength;
+                        nodes = increaseNodesSpace(nodes, nodesLength);
+                    }
                 }
             }
         }
@@ -198,24 +204,24 @@ void addEdge(int ** adjList, char *to, char *from, struct node ** nodesMap, char
 
 void createAdjList(char * fileName, int ** adjList, struct node ** nodesMap, char ** nodeKeys, int * adjListCounts, int * outDegrees) {
     FILE *fp = fopen(fileName, "r");
-    char line[21];
+    char line[65];
     int commentCount = 0;
-    char to[10], from[10];
+    char to[30], from[30];
 
-    while (fgets(line, 21, fp) != NULL) {
+    while (fgets(line, 65, fp) != NULL) {
         if (line[0] == '#') {
             commentCount++;
-            while (fgets(line, 21, fp) != NULL && commentCount < 4) {
+            while (fgets(line, 65, fp) != NULL && commentCount < 4) {
                 if (line[0] == '#') {
                     commentCount++;
                 }
             } 
         }
         else {
-            sscanf(line, format, &from, &to);
- //           printf("%s -> %s\n", to, from);
+            sscanf(line, format, &to, &from);
+      //      printf("%s -> %s\n", to, from);
             addEdge(adjList, to, from, nodesMap, nodeKeys, adjListCounts, outDegrees);
-//            getchar();
+      //      getchar();
         }
     }
 }
@@ -239,18 +245,19 @@ int main (int argc, char *argv[]) {
         perror("Error: Usage requires a file name and flag inidicating the type of file.\nFlag\tFile Format\n---------------------\n-n\t1,0,2,0\n-t\t\"One\",0,\"Two\",0\n-s\t1\t2\n");
         exit(EXIT_FAILURE);
     }
+    printf("Reading file...\n");
     double start, end;
     start = sys_time();
     char ** nodeKeys = malloc(20 * sizeof(char*));
     struct node **nodesMap = calloc(1, sizeof(struct node *));
     nodeKeys = calcNumNodes(argv[1], nodesMap, nodeKeys, 20);
-    end = sys_time();
-    printf("Creating node map: %f\n", end-start);
+    //end = sys_time();
+    //printf("Creating node map: %f\n", end-start);
     
-    start = sys_time(); 
+    //start = sys_time(); 
     //while (nodesMap[++numNodes] != NULL); 
     //printNodesMap(nodeKeys);
-    printf("Number of Nodes: %d\n", numNodes); 
+    //printf("Number of Nodes: %d\n", numNodes); 
     //getchar();
     int ** adjList = malloc(numNodes * sizeof(int *));
     int * adjListCounts = calloc(numNodes, sizeof(int));
@@ -261,29 +268,24 @@ int main (int argc, char *argv[]) {
     //printAdjList(adjList, nodeKeys, outDegrees);
     //getchar();
     end = sys_time();
-    printf("Creating Adjacency List: %f\n", end-start);
+    printf("Read Time: %f\n", end-start);
 
     start = sys_time(); 
-    printf("Starting pagerank calculations\n");
+    printf("Starting pagerank calculations...\n");
     float * pageRanks = runPageRankE(adjList, outDegrees, numNodes);
     end = sys_time();
-    printf("Running Calculations: %f\n", end-start); 
-    int  i = 0;
-    start = sys_time(); 
+    printf("Processing Time: %f\n", end-start); 
+    
     runMergeSort(pageRanks, nodeKeys, numNodes);
-    end = sys_time();
-    printf("Sorting rankings: %f\n", end-start);
+    //start = sys_time(); 
+    //end = sys_time();
+    //printf("Sorting rankings: %f\n", end-start);
     //getchar();
-    for (i = 0; i < numNodes; i++) {
+    printf("\nResults...\n");
+    int  i = 0;
+    for (i = 0; i < 20; i++) {
         printf("%s\t%1.12f\n", nodeKeys[i], pageRanks[i]);
     }
 
     _mm_free(pageRanks);
-    /**char *arr[4]
-    int curIndex = 0;
-    if (find("a", arr, curIndex, 4) == -1) { curIndex++; }
-    printf("Array Init\n");
-    printf("a - %d\n", find("a", arr, curIndex, 4));
-    printf("c - %d\n", find("c", arr, curIndex, 4));
-    printf("c - %d\n", find("c", arr, curIndex, 4));**/
 }
