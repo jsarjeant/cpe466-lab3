@@ -298,26 +298,10 @@ int main (int argc, char *argv[]) {
     if(error == cudaSuccess)
       printf("Memcpy 1 successful!\n");
     
-    for(i = 0; i < numNodes; i++) {
-      printf("Num elements: %d\n", adjList[i][0]);
-      printf("CudaOutDegrees is %d\n", cudaOutDegrees[0]);
-      //printf("address is %d\n", cudaAdjList[0]);
-      cudaMalloc((void**)cudaAdjList[i], (adjList[i][0]+1)*sizeof(int));
-      //printf("Finished more cuda stuff\n");
-      //printf("address is %d\n", cudaAdjList[i]);
-      cudaMemcpy(cudaAdjList[i], adjList[i], (adjList[i][0]+1)*sizeof(int), cudaMemcpyHostToDevice);
-    }
-    printf("Finished more cuda stuff\n");
-    
     printf("Starting kernel...\n");
     testKernel<<<dimGrid, dimBlock>>>(cudaOutDegrees, cudaAdjList);
     printf("Ending kernel...\n");
    
-  
-    
-    error = cudaMemcpy(outDegrees, cudaOutDegrees, numNodes*sizeof(int), cudaMemcpyDeviceToHost); 
-
-
     start = sys_time(); 
 
     printf("Starting pagerank calculations\n");
