@@ -270,10 +270,10 @@ int main (int argc, char *argv[]) {
     int maxOutdegrees = 0;
     int  i = 0;
    // double avg = (double)maxOutdegrees / (double)numNodes;
-    printf("Max Indegree: %d\n", maxOutdegrees);
-    getchar();
+    //printf("Max Indegree: %d\n", maxOutdegrees);
+    //getchar();
     end = sys_time();
-    printf("Read Time: %f\n", end-start);
+    printf("Read Time: %f s\n", end-start);
 
     start = sys_time(); 
     printf("Starting pagerank calculations...\n");
@@ -287,7 +287,7 @@ int main (int argc, char *argv[]) {
     printf("Starting pagerank calculations\n");
     float * pageRanks = runPageRankE(adjList, outDegrees, numNodes);
     end = sys_time();
-    printf("Processing Time: %f\n", end-start); 
+    printf("Processing Time: %f s\n", end-start); 
     
     runMergeSort(pageRanks, nodeKeys, numNodes);
     //start = sys_time(); 

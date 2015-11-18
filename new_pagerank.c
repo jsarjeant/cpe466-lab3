@@ -127,6 +127,7 @@ float *runPageRankE(int **graph, int *outDegrees, int numVerts) {
 
     //  printf("\n%d. diff: %f\n", ittrCount, diff);
    }
+   printf("Number of iterations: %d\n", ittrCount);
    _mm_free(oldRanks);
 
    return newRanks;
