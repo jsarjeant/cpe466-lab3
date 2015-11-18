@@ -45,20 +45,26 @@ struct node {
     UT_hash_handle hh;
 };
 
-void processArg(char argument) {
+void processArg(char argument, char * football) {
     arg = argument;
    
     if (arg == 't' || arg == 'n') {
-        fromIndex = 0;
-        toIndex = 2;
-        format = "%[^','],%*[^','],%[^','],%*[^',']"; 
+        format = "%[^','], %*[^','], %[^','], %*[^',']"; 
     }
     else {
-        fromIndex = 0;
-        toIndex = 1;
         format = "%s %s";
     }
+
+    if (football == NULL) {
+        fromIndex = 0;
+        toIndex = 1;
+    }
+    else {
+        fromIndex = 1;
+        toIndex = 0;
+    }
 }
+
 
 int find (char * element, struct node **nodesMap, char ** array, int currentIndex, int arrayLength) {
     struct node *n;
@@ -106,33 +112,40 @@ char ** increaseNodesSpace(char ** nodes, int newSize) {
 
 char ** calcNumNodes(char * fileName, struct node **nodesMap, char ** nodes, int baseLength) {
     FILE *fp = fopen(fileName, "r");
-    char line[21];
+    char line[65];
     int nodesLength = baseLength;
     
     int commentCount = 0, currentIndex = 0;
-    char from[10], to[10];
+    char lineNodes[2][30];
+    void * tmp;
+    int varsRead;
 
-    while (fgets(line, 21, fp) != NULL) {
+    while (fgets(line, 65, fp) != NULL) {
         if (line[0] == '#') {
             commentCount++;
-            while (fgets(line, 21, fp) != NULL && commentCount < 4) {
+            while (fgets(line, 65, fp) != NULL && commentCount < 4) {
                 if (line[0] == '#') {
                     commentCount++;
                 }
             } 
         }
         else {
-            sscanf(line, format, &from, &to);
-            if (find(from, nodesMap, nodes, currentIndex, nodesLength) == -1) { 
-                if (++currentIndex >= nodesLength) {
-                    nodesLength += baseLength;
-                    nodes = increaseNodesSpace(nodes, nodesLength);  
-                } 
-            }
-            if (find(to, nodesMap, nodes, currentIndex, nodesLength) == -1) {
-                if (++currentIndex >= nodesLength) {
-                    nodesLength += baseLength;
-                    nodes = increaseNodesSpace(nodes, nodesLength);
+            //printf("Scanning...\n");
+            varsRead = sscanf(line, format, &lineNodes[0], &lineNodes[1]);
+            //printf("*%s*\n%s->%s\n%d\n", line, from, to, strcmp(line, "\n"));
+            //getchar();
+            if (strcmp(line, "\n") && varsRead == 2) {
+                if (find(lineNodes[fromIndex], nodesMap, nodes, currentIndex, nodesLength) == -1) { 
+                    if (++currentIndex >= nodesLength) {
+                        nodesLength += baseLength;
+                        nodes = increaseNodesSpace(nodes, nodesLength);  
+                    } 
+                }
+                if (find(lineNodes[toIndex], nodesMap, nodes, currentIndex, nodesLength) == -1) {
+                    if (++currentIndex >= nodesLength) {
+                        nodesLength += baseLength;
+                        nodes = increaseNodesSpace(nodes, nodesLength);
+                    }
                 }
             }
         }
@@ -216,24 +229,24 @@ void addEdge(int ** adjList, char *to, char *from, struct node ** nodesMap, char
 
 void createAdjList(char * fileName, int ** adjList, struct node ** nodesMap, char ** nodeKeys, int * adjListCounts, int * outDegrees) {
     FILE *fp = fopen(fileName, "r");
-    char line[21];
+    char line[65];
     int commentCount = 0;
-    char to[10], from[10];
+    char lineNodes[2][30]; 
 
-    while (fgets(line, 21, fp) != NULL) {
+    while (fgets(line, 65, fp) != NULL) {
         if (line[0] == '#') {
             commentCount++;
-            while (fgets(line, 21, fp) != NULL && commentCount < 4) {
+            while (fgets(line, 65, fp) != NULL && commentCount < 4) {
                 if (line[0] == '#') {
                     commentCount++;
                 }
             } 
         }
         else {
-            sscanf(line, format, &from, &to);
- //           printf("%s -> %s\n", to, from);
-            addEdge(adjList, to, from, nodesMap, nodeKeys, adjListCounts, outDegrees);
-//            getchar();
+            sscanf(line, format, &lineNodes[0], &lineNodes[1]);
+      //      printf("%s -> %s\n", to, from);
+            addEdge(adjList, lineNodes[toIndex], lineNodes[fromIndex], nodesMap, nodeKeys, adjListCounts, outDegrees);
+      //      getchar();
         }
     }
 }
