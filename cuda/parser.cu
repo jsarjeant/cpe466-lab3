@@ -2,20 +2,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <search.h>
+#include <math.h>
 #include <time.h>
 #include <sys/time.h>
 #include "cuda_pagerank.h"
 #include "uthash.h"
 #include "cuda_runtime.h"
-
+#define BLOCKSIZE 512
 #define MICROSEC_CONV 1000000.0
-__global__ void testKernel(int* outDegrees, int** adjList);
 
-__global__ void testKernel(int* outDegrees, int** adjList) {
-   int x = threadIdx.x;
-   int y = threadIdx.y;
-    
-   printf("Idx is %d,%d.\n", x, y);
+__global__ void testKernel(int* list, int* listidx, int* outDegrees, int numNodes, float* cudaOldRanks, float* cudaNewRanks);
+
+__global__ void testKernel(int* list, int* listidx, int* outDegrees, int numNodes, float* cudaOldRanks, float* cudaNewRanks) {
+   int threadNum = blockIdx.x * blockDim.x + threadIdx.x;
+   int i = 0, sum = 0, length = list[listidx[threadNum]];
+   int* curIdx = &list[listidx[threadNum]] + 1;
+
+   for(; i < length; i++) {
+      sum += (cudaOldRanks[*(curIdx+i)]/(float)outDegrees[*(curIdx+i)]); 
+   }
 }
 
 static double sys_time() {
@@ -28,6 +33,7 @@ static double sys_time() {
 int fromIndex, toIndex;
 char arg;
 char *format = NULL;
+
 int MAX_VAL = 4847571; 
 int numNodes = 0;
 
@@ -245,8 +251,8 @@ int completeAdjList(int ** adjList, int * adjListCounts) {
 }
 
 void populateList(int *list, int *listIndexes, int **adjList) {
-   int i = 0, currentIndex = 0, length, j = 0;
-   for (i; i < numNodes; i++) {
+   int i = 0, currentIndex = 0, length;
+   for (; i < numNodes; i++) {
       listIndexes[i] = currentIndex;
       length = adjList[i][0] + 1;
       memcpy(list + currentIndex, adjList[i], length * sizeof(int));
@@ -257,7 +263,7 @@ void populateList(int *list, int *listIndexes, int **adjList) {
 void printList(int *list, int * listIndexes, int total, char ** nodeKeys) {
   int i = 0;
   printf("[");
-  for (i; i < total; i++) {
+  for (; i < total; i++) {
    printf("%s, ", nodeKeys[list[i]]);
   }
   printf("]\n");
@@ -277,19 +283,20 @@ int main (int argc, char *argv[]) {
         perror("Error: Usage requires a file name and flag inidicating the type of file.\nFlag\tFile Format\n---------------------\n-n\t1,0,2,0\n-t\t\"One\",0,\"Two\",0\n-s\t1\t2\n");
         exit(EXIT_FAILURE);
     }
+    printf("Reading...\n");
     double start, end;
-    int i;
+    int i, j;
     start = sys_time();
     char ** nodeKeys = (char**)malloc(20 * sizeof(char*));
     struct node **nodesMap = (struct node **)calloc(1, sizeof(struct node *));
     nodeKeys = calcNumNodes(argv[1], nodesMap, nodeKeys, 20);
     end = sys_time();
-    printf("Creating node map: %f\n", end-start);
+    //printf("Creating node map: %f\n", end-start);
     
-    start = sys_time(); 
+    //start = sys_time(); 
     //while (nodesMap[++numNodes] != NULL); 
     //printNodesMap(nodeKeys);
-    printf("Number of Nodes: %d\n", numNodes); 
+    //printf("Number of Nodes: %d\n", numNodes); 
     //getchar();
     int ** adjList = (int**)malloc(numNodes * sizeof(int *));
     int * adjListCounts = (int*)calloc(numNodes, sizeof(int));
@@ -299,49 +306,87 @@ int main (int argc, char *argv[]) {
     int total = completeAdjList(adjList, adjListCounts);
     int *list = (int *)malloc(total * sizeof(int));
     int *listIndexes = (int *)malloc(numNodes*sizeof(int));
-
+    
     populateList(list, listIndexes, adjList);
-    printAdjList(adjList, nodeKeys, outDegrees);
-    printList(list, listIndexes, total, nodeKeys);
+    //printAdjList(adjList, nodeKeys, outDegrees);
+    //printList(list, listIndexes, total, nodeKeys);
     //getchar();
     end = sys_time();
-    printf("Creating Adjacency List: %f\n", end-start);
+    printf("Read Time: %f\n", end-start);
      
-    int** cudaAdjList = NULL;
     int* cudaOutDegrees;
+    int* cudaList;
+    int* cudaListIndexes;
     cudaError_t error;
+    float* newRanks, *oldRanks, *cudaOldRanks, *cudaNewRanks;
+    float diff = 0, sum = 0;
 
-    dim3 dimGrid(1, 1);
-    dim3 dimBlock(10, 1);
+    oldRanks = (float*)malloc(numNodes*sizeof(float));
+    newRanks = (float*)malloc(numNodes*sizeof(float));
+   
+    for (i = 0; i < numNodes; i++) {
+       newRanks[i] = (float) 1 / numNodes;
+       diff += newRanks[i];
+    } 
 
-    printf("address is %d\n", cudaAdjList);
-    error = cudaMalloc((void**)&cudaAdjList, sizeof(int*)*numNodes);
-    printf("address is %d\n", cudaAdjList);
-    if(error == cudaSuccess)
-      printf("Malloc 1 successful!\n");
-    
+    int numBlocks = (int) ceil((double) numNodes/(BLOCKSIZE));
+    printf("blocks is %d\n", numBlocks);
+
+    dim3 dimBlock(BLOCKSIZE, 1);
+    dim3 dimGrid(numBlocks, 1);
+
     error = cudaMalloc((void**)&cudaOutDegrees, sizeof(int)*numNodes);
     if(error == cudaSuccess)
-      printf("Malloc 2 successful!\n");
+      printf("cudaOutDegrees malloc successful!\n");
     error = cudaMemcpy(cudaOutDegrees, outDegrees, numNodes*sizeof(int), cudaMemcpyHostToDevice); 
 
+    error = cudaMalloc((void**)&cudaList, sizeof(int)*total);
     if(error == cudaSuccess)
-      printf("Memcpy 1 successful!\n");
-    
-    printf("Starting kernel...\n");
-    testKernel<<<dimGrid, dimBlock>>>(cudaOutDegrees, cudaAdjList);
-    printf("Ending kernel...\n");
-   
-    start = sys_time(); 
+      printf("cudaList malloc successful!\n");
+    error = cudaMemcpy(cudaList, list, total*sizeof(int), cudaMemcpyHostToDevice); 
 
-    printf("Starting pagerank calculations\n");
-    float * pageRanks = runPageRankE(adjList, outDegrees, numNodes);
+    error = cudaMalloc((void**)&cudaListIndexes, sizeof(int)*numNodes);
+    if(error == cudaSuccess)
+      printf("cudaListIndexes malloc successful!\n");
+    error = cudaMemcpy(cudaListIndexes, listIndexes, numNodes*sizeof(int), cudaMemcpyHostToDevice); 
+
+    error = cudaMalloc((void**)&cudaOldRanks, sizeof(float)*numNodes);
+    if(error == cudaSuccess)
+      printf("cudaListIndexes malloc successful!\n");
+
+    error = cudaMalloc((void**)&cudaNewRanks, sizeof(float)*numNodes);
+    if(error == cudaSuccess)
+      printf("cudaranks malloc successful!\n");
+
+    printf("Starting pagerank calculations...\n");
+    start = sys_time(); 
+    while(diff >= EPSILON) {
+      diff = 0;
+      memcpy(oldRanks, newRanks, sizeof(float) * numNodes);
+      cudaMemcpy(cudaOldRanks, oldRanks, numNodes*sizeof(int), cudaMemcpyHostToDevice); 
+      testKernel<<<dimGrid, dimBlock>>>(cudaList, cudaListIndexes, cudaOutDegrees, numNodes, cudaOldRanks, cudaNewRanks);
+      cudaMemcpy(newRanks, cudaNewRanks, numNodes*sizeof(float), cudaMemcpyDeviceToHost);
+         
+      for (i = 0; i < numNodes; i++) {
+         sum = 0; 
+         for (j = 1; j <= adjList[i][0]; j++) {
+            sum += ((float) oldRanks[adjList[i][j]]) / ((float) outDegrees[adjList[i][j]]);
+         }  
+         
+         newRanks[i] = (1 - D_VAL) / numNodes + D_VAL * sum;
+         diff += fabsf(newRanks[i] - oldRanks[i]); 
+      }  
+
+    }
+
+    //float * pageRanks = runPageRankE(adjList, outDegrees, numNodes);
+    float * pageRanks = newRanks;
     end = sys_time();
     printf("Running Calculations: %f\n", end-start); 
     start = sys_time(); 
     runMergeSort(pageRanks, nodeKeys, numNodes);
-    end = sys_time();
-    printf("Sorting rankings: %f\n", end-start);
+    //end = sys_time();
+    //printf("Sorting rankings: %f\n", end-start);
     //getchar();
     for (i = 0; i < 10; i++) {
         printf("%s\t%1.12f\n", nodeKeys[i], pageRanks[i]);
