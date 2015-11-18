@@ -294,7 +294,6 @@ int main (int argc, char *argv[]) {
       printf("Malloc 2 successful!\n");
     error = cudaMemcpy(cudaOutDegrees, outDegrees, numNodes*sizeof(int), cudaMemcpyHostToDevice); 
 
-    printf("CudaOutDegrees is %d\n", cudaOutDegrees[0]);
     if(error == cudaSuccess)
       printf("Memcpy 1 successful!\n");
     
