@@ -267,6 +267,11 @@ int main (int argc, char *argv[]) {
     completeAdjList(adjList, adjListCounts);
     //printAdjList(adjList, nodeKeys, outDegrees);
     //getchar();
+    int maxOutdegrees = 0;
+    int  i = 0;
+   // double avg = (double)maxOutdegrees / (double)numNodes;
+    printf("Max Indegree: %d\n", maxOutdegrees);
+    getchar();
     end = sys_time();
     printf("Read Time: %f\n", end-start);
 
@@ -282,7 +287,6 @@ int main (int argc, char *argv[]) {
     //printf("Sorting rankings: %f\n", end-start);
     //getchar();
     printf("\nResults...\n");
-    int  i = 0;
     for (i = 0; i < 20; i++) {
         printf("%s\t%1.12f\n", nodeKeys[i], pageRanks[i]);
     }

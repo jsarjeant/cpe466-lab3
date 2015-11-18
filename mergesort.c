@@ -49,7 +49,7 @@ float* runMergeSort(float* ranks, char** names, int size) {
 		#pragma omp master
 		{
 			num_threads = omp_get_num_threads();
-         printf("Num threads: %d\n", num_threads);
+//         printf("Num threads: %d\n", num_threads);
 		}
 	}
 
@@ -75,21 +75,21 @@ void tearDown(double start, double end, float* a, int size) {
 	int sorted = 1;
 	int i;
 
-	printf("Time to execute: %f\n", end-start);
+	//printf("Time to execute: %f\n", end-start);
 	
 	for (i = 0; i < size-1; ++i) {
 		sorted &= (a[i] >= a[i+1]);
 	}
 
-	printf("Array sorted: %d\n", sorted);
-   printf("Size is %d\n", size);
-	#pragma omp parallel
+	//printf("Array sorted: %d\n", sorted);
+   //printf("Size is %d\n", size);
+	/*#pragma omp parallel
 	{
 		#pragma omp master
 		{
 			printf("Num threads: %d\n", omp_get_num_threads());
 		}
-	}
+	}*/
 }
 
 void merge(float* a, char** names, int size, float* temp, char** tempNames) {
