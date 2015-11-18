@@ -5,8 +5,8 @@
 #include <math.h>
 #include <time.h>
 #include <sys/time.h>
-#include "cuda_pagerank.h"
 #include "uthash.h"
+#include "cuda_pagerank.h"
 #include "cuda_runtime.h"
 #define BLOCKSIZE 512
 #define MICROSEC_CONV 1000000.0
@@ -15,11 +15,13 @@ __global__ void testKernel(int* list, int* listidx, int* outDegrees, int numNode
 
 __global__ void testKernel(int* list, int* listidx, int* outDegrees, int numNodes, float* cudaOldRanks, float* cudaNewRanks) {
    int threadNum = blockIdx.x * blockDim.x + threadIdx.x;
+   if(threadNum <numNodes) {
    int i = 0, sum = 0, length = list[listidx[threadNum]];
    int* curIdx = &list[listidx[threadNum]] + 1;
 
    for(; i < length; i++) {
       sum += (cudaOldRanks[*(curIdx+i)]/(float)outDegrees[*(curIdx+i)]); 
+   }
    }
 }
 
@@ -381,7 +383,7 @@ int main (int argc, char *argv[]) {
 
     }
 
-    print("Number of Iterations: %d\n", itterCount);
+    printf("Number of Iterations: %d\n", itterCount);
 
     //float * pageRanks = runPageRankE(adjList, outDegrees, numNodes);
     float * pageRanks = newRanks;
