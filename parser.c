@@ -26,18 +26,23 @@ struct node {
     UT_hash_handle hh;
 };
 
-void processArg(char argument) {
+void processArg(char argument, char * football) {
     arg = argument;
    
     if (arg == 't' || arg == 'n') {
-        fromIndex = 0;
-        toIndex = 2;
         format = "%[^','], %*[^','], %[^','], %*[^',']"; 
     }
     else {
+        format = "%s %s";
+    }
+
+    if (football == NULL) {
         fromIndex = 0;
         toIndex = 1;
-        format = "%s %s";
+    }
+    else {
+        fromIndex = 1;
+        toIndex = 0;
     }
 }
 
@@ -91,7 +96,7 @@ char ** calcNumNodes(char * fileName, struct node **nodesMap, char ** nodes, int
     int nodesLength = baseLength;
     
     int commentCount = 0, currentIndex = 0;
-    char from[30], to[30];
+    char lineNodes[2][30];
     void * tmp;
     int varsRead;
 
@@ -106,17 +111,17 @@ char ** calcNumNodes(char * fileName, struct node **nodesMap, char ** nodes, int
         }
         else {
             //printf("Scanning...\n");
-            varsRead = sscanf(line, format, &to, &from);
+            varsRead = sscanf(line, format, &lineNodes[0], &lineNodes[1]);
             //printf("*%s*\n%s->%s\n%d\n", line, from, to, strcmp(line, "\n"));
             //getchar();
             if (strcmp(line, "\n") && varsRead == 2) {
-                if (find(from, nodesMap, nodes, currentIndex, nodesLength) == -1) { 
+                if (find(lineNodes[fromIndex], nodesMap, nodes, currentIndex, nodesLength) == -1) { 
                     if (++currentIndex >= nodesLength) {
                         nodesLength += baseLength;
                         nodes = increaseNodesSpace(nodes, nodesLength);  
                     } 
                 }
-                if (find(to, nodesMap, nodes, currentIndex, nodesLength) == -1) {
+                if (find(lineNodes[toIndex], nodesMap, nodes, currentIndex, nodesLength) == -1) {
                     if (++currentIndex >= nodesLength) {
                         nodesLength += baseLength;
                         nodes = increaseNodesSpace(nodes, nodesLength);
@@ -206,7 +211,7 @@ void createAdjList(char * fileName, int ** adjList, struct node ** nodesMap, cha
     FILE *fp = fopen(fileName, "r");
     char line[65];
     int commentCount = 0;
-    char to[30], from[30];
+    char lineNodes[2][30]; 
 
     while (fgets(line, 65, fp) != NULL) {
         if (line[0] == '#') {
@@ -218,9 +223,9 @@ void createAdjList(char * fileName, int ** adjList, struct node ** nodesMap, cha
             } 
         }
         else {
-            sscanf(line, format, &to, &from);
+            sscanf(line, format, &lineNodes[0], &lineNodes[1]);
       //      printf("%s -> %s\n", to, from);
-            addEdge(adjList, to, from, nodesMap, nodeKeys, adjListCounts, outDegrees);
+            addEdge(adjList, lineNodes[toIndex], lineNodes[fromIndex], nodesMap, nodeKeys, adjListCounts, outDegrees);
       //      getchar();
         }
     }
@@ -239,7 +244,7 @@ void completeAdjList(int ** adjList, int * adjListCounts) {
 
 int main (int argc, char *argv[]) {
     if (argv[1] != NULL && argv[2] != NULL) {
-        processArg(argv[2][1]);
+        processArg(argv[2][1], argv[3]);
     }
     else {
         perror("Error: Usage requires a file name and flag inidicating the type of file.\nFlag\tFile Format\n---------------------\n-n\t1,0,2,0\n-t\t\"One\",0,\"Two\",0\n-s\t1\t2\n");
